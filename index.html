@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html class="h-full bg-gray-100">
+
+<head>
+    <title>QR-Code Input Field</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://unpkg.com/html5-qrcode@2.0.9/dist/html5-qrcode.min.js"></script>
+
+    <!-- Alpine Plugins -->
+    <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/focus@3.x.x/dist/cdn.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/persist@3.x.x/dist/cdn.min.js"></script>
+
+    <!-- Alpine Core -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    <style type="text/tailwindcss">
+        @theme {
+            --color-clifford: #da373d;
+            --font-sans: InterVariable, sans-serif;
+            --font-sans--font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+        }
+    </style>
+</head>
+
+<body class="h-full">
+    <div class="min-h-full">
+
+        <header class="relative bg-white shadow-sm">
+            <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+                <h1 class="text-3xl font-bold tracking-tight text-gray-900">QR-Code Input Field Demo</h1>
+            </div>
+        </header>
+        <main>
+            <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+
+                <div x-data="scanModal('qr-reader')" class="flex justify-center">
+                    <!-- Trigger -->
+                    <span class="w-1/2">
+                        <label for="did" class="block text-sm/6 font-medium text-gray-900">DID</label>
+                        <div class="mt-2">
+                            <div
+                                class="flex items-center rounded-md bg-white pl-3 outline-1 -outline-offset-1 outline-gray-300">
+                                <input id="did" type="text" name="price"
+                                    class="block min-w-0 grow py-1.5 pr-3 pl-1 text-base text-gray-900 placeholder:text-gray-400 focus:outline-none sm:text-sm/6" />
+                                <div class="flex items-center shrink-0 focus-within:relative">
+                                    <input x-on:click="openModal()" type="button"
+                                        class="w-full appearance-none rounded-md px-4 py-1.5 bg-indigo-700 hover:bg-indigo-600 cursor-pointer text-base text-white font-bold placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
+                                        value="Scan" />
+                                </div>
+                            </div>
+                        </div>
+                    </span>
+
+                    <!-- Modal -->
+                    <div x-show="open" style="display: none" x-on:keydown.escape.prevent.stop="closeModal()"
+                        role="dialog" aria-modal="true" x-id="['modal-qr-scan']" :aria-labelledby="$id('modal-qr-scan')"
+                        class="fixed inset-0 z-10 overflow-y-auto">
+                        <!-- Overlay -->
+                        <div x-show="open" x-transition.opacity class="fixed inset-0 bg-black/25"></div>
+
+                        <!-- Panel -->
+                        <div x-show="open" x-transition x-on:click="closeModal()"
+                            class="relative flex min-h-screen items-center justify-center p-4 w-full">
+                            <div x-on:click.stop x-trap.noscroll.inert="open"
+                                class="relative min-w-96 max-w-7xl w-4xl rounded-xl bg-white p-6 shadow-lg">
+                                <!-- Title -->
+                                <h2 class="font-medium text-gray-800" :id="$id('modal-qr-scan')">Scan QR-Code with DID info</h2>
+
+                                <!-- Content -->
+                                <p class="mt-2 text-gray-500 max-w-xl">
+                                    Point your camera to a QR-Code containing DID information. Once scanned, the
+                                    input field will be automatically filled with the decoded text.
+                                </p>
+
+                                <div>
+                                        <label for="camera" class="block text-sm/6 font-medium text-gray-900 mt-4">Select Camera</label>
+                                        <div class="mt-2">
+                                            <select id="camera" name="camera"
+                                                class="block w-full rounded-md border-gray-300 py-2 pl-3 pr-10 text-base focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+                                                x-model="cameraId">
+                                                <template x-for="camera in cameras" :key="camera.id">
+                                                    <option :value="camera.id" x-text="camera.label"></option>
+                                                </template>
+                                            </select>
+                                        </div>
+                                </div>
+
+                                <div id="qr-reader" class="mt-10 w-full"></div>
+
+                                <!-- Buttons -->
+                                <div class="mt-6 flex justify-end space-x-2">
+                                    <button type="button" x-on:click="closeModal()"
+                                        class="relative flex items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-transparent bg-transparent px-4 py-2 text-gray-800 hover:bg-gray-800/10">
+                                        Cancel
+                                    </button>
+                                    <button type="button"
+                                        x-show="! scanning"
+                                        x-bind:disabled="starting"
+                                        x-on:click="startScan('did')"
+                                        class="relative flex items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-transparent bg-gray-800 px-4 py-2 text-white hover:bg-gray-900"
+                                        :class="starting ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'"
+                                        >
+                                        Start Scan
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div>
+
+
+
+
+
+                </div>
+            </div>
+        </main>
+    </div>
+    <script defer>
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('scanModal', (targetRenderId) => ({
+                open: false,
+                starting: false,
+                scanning: false,
+                targetRenderId: targetRenderId,
+                targetInputId: null,
+                html5QrcodeObj: null,
+                cameraId: Alpine.$persist(null).as('qr-code-scanner-camera-id'),
+                cameras: [],
+
+                init() {
+                    // This method will trigger user permissions
+                    Html5Qrcode.getCameras().then(cameras => {
+                        /**
+                         * devices would be an array of objects of type:
+                         * { id: "id", label: "label" }
+                         */
+                        if (cameras && cameras.length) {
+                            this.cameraId = cameras[0].id;
+                            this.cameras = cameras;
+                            // .. use this to start scanning.
+                            console.log('Camera ID:', this.cameraId);
+                        }
+                    }).catch(err => {
+                        alert('Error getting cameras: ' + err);
+                    });
+                },
+
+                destroy() {
+                    this.html5QrcodeObj = null;
+
+                    this.scanning = false;
+                    this.open = false;
+                },
+
+                openModal() {
+                    this.open = true;
+                },
+
+                closeModal() {
+                    if (! this.html5QrcodeObj || ! this.scanning) {
+                        this.destroy();
+                        return;
+                    }
+
+                    this.html5QrcodeObj.stop().then((ignore) => {
+                        // QR Code scanning is stopped.
+                        this.html5QrcodeObj.clear();
+
+                        this.scanning = false;
+
+                        this.destroy();
+                    }).catch((err) => {
+                        // Stop failed, handle it.
+                        alert('Error stopping QR code scanning: ' + err);
+                    });
+                },
+
+                startScan(targetInputId) {
+                    this.starting = true;
+                    this.targetInputId = targetInputId;
+
+                    this.html5QrcodeObj = new Html5Qrcode(this.targetRenderId);
+
+                    this.html5QrcodeObj.start(
+                            this.cameraId,
+                            {
+                                fps: 3,    // Optional, frame per seconds for qr code scanning
+                                qrbox: 320, //(viewfinderWidth, viewfinderHeight) => ({ width: viewfinderWidth/2, height: viewfinderHeight/2 }),
+                                disableFlip: true,
+                            },
+                            (decodedText, decodedResult) => this.qrcodeScaned(decodedText, decodedResult),
+                            (errorMessage) => {}
+                        ).then(() => {
+                            this.starting = false;
+                            this.scanning = true;
+                        })
+                        .catch((err) => {
+                            // Start failed, handle it.
+                            this.starting = false;
+                            this.scanning = false;
+                            alert('Start failed: ' + err);
+                        });
+                },
+
+                qrcodeScaned(decodedText, decodedResult) {
+                    let did_element = document.getElementById(this.targetInputId);
+                    if (did_element) {
+                        did_element.value = decodedText;
+                    }
+                    did_element = null;
+
+                    this.closeModal();
+                },
+
+
+            }))
+        });
+    </script>
+</body>
+
+</html>
